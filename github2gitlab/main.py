@@ -130,6 +130,9 @@ class GitHub2GitLab(object):
         parser.add_argument('--ignore-closed', action='store_const',
                             const=True,
                             help='ignore pull requests closed and not merged')
+        parser.add_argument('--skip-add-key', action='store_const',
+                            const=True,
+                            help='do not attempt to add local SSH key to Gitlab')
         parser.add_argument('--skip-pull-requests', action='store_const',
                             const=True,
                             help='do not mirror PR to MR')
@@ -152,7 +155,8 @@ class GitHub2GitLab(object):
         return GitHub2GitLab(GitHub2GitLab.get_parser().parse_args(argv))
 
     def run(self):
-        self.add_key()
+        if not self.args.skip_add_key:
+            self.add_key()
         if self.add_project():
             self.unprotect_branches()
         self.git_mirror()
