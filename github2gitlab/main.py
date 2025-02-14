@@ -58,8 +58,11 @@ class GitHub2GitLab(object):
 
         if not self.args.gitlab_repo:
             self.args.gitlab_repo = self.args.github_repo
-        (self.args.gitlab_namespace,
-         self.args.gitlab_name) = self.args.gitlab_repo.split('/')
+
+        repo_parts = self.args.gitlab_repo.split('/')
+        self.args.gitlab_name = repo_parts.pop()
+        self.args.gitlab_namespace = '/'.join(repo_parts)
+
         self.args.gitlab_repo = parse.quote_plus(self.args.gitlab_repo)
 
         self.github = {
@@ -75,6 +78,7 @@ class GitHub2GitLab(object):
             'host': self.args.gitlab_url,
             'name': self.args.gitlab_name,
             'namespace': self.args.gitlab_namespace,
+            'group': None,
             'url': self.args.gitlab_url + "/api/v4",
             'repo': self.args.gitlab_repo,
             'token': self.args.gitlab_token,
@@ -88,6 +92,14 @@ class GitHub2GitLab(object):
 
         logging.getLogger("urllib3").setLevel(level)
         logging.getLogger('github2gitlab').setLevel(level)
+
+        g = self.gitlab
+        url = g['url'] + "/groups"
+        query = {'private_token': g['token'], 'all_available': 'true', 'per_page': 10000}
+        groups = requests.get(url, params=query).json()
+        matches = list(filter(lambda group: group['full_path'] == g['namespace'].lower(), groups))
+        if any(matches):
+            g['group_id'] = matches[0]['id']
 
         self.tmpdir = "/tmp"
 
@@ -130,6 +142,9 @@ class GitHub2GitLab(object):
         parser.add_argument('--clean', action='store_const',
                             const=True,
                             help='Remove the repo after sync')
+        parser.add_argument('--visibility',
+                            help='Visbility of created repos (public, internal, private)',
+                            default='public')
         return parser
 
     @staticmethod
@@ -288,15 +303,21 @@ class GitHub2GitLab(object):
         g = self.gitlab
         url = g['url'] + "/projects/" + g['repo']
         query = {'private_token': g['token']}
+        if g['group_id']:
+            query['group_id'] = g['group_id']
+
         if (requests.get(url, params=query).status_code == requests.codes.ok):
             log.debug("project " + url + " already exists")
             return None
         else:
-            log.info("add project " + g['repo'])
             url = g['url'] + "/projects"
-            query['public'] = 'true'
-            query['namespace'] = g['namespace']
+            query['visibility'] = self.args.visibility
             query['name'] = g['name']
+            if g['group_id']:
+                query['namespace_id'] = g['group_id']
+            else:
+                query['namespace'] = g['namespace']
+            log.info("add project " + g['repo'])
             result = requests.post(url, params=query)
             if result.status_code != requests.codes.created:
                 raise ValueError(result.text)
