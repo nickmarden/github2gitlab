@@ -171,8 +171,7 @@ class GitHub2GitLab(object):
             args=command,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            shell=True,
-            bufsize=1)
+            shell=True)
         lines = []
         with proc.stdout:
             for line in iter(proc.stdout.readline, b''):
