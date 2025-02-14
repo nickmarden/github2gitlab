@@ -38,7 +38,7 @@ were never merged.
        --gitlab-url http://workbench.dachary.org \
        --gitlab-token sxQJ67SQKihMrGWVf \
        --gitlab-repo ceph/ceph-backports \
-       --github-token 64933d355fda9844aadd4e224d \
+       --github-auth githubusername:64933d355fda9844aadd4e224d \
        --github-repo ceph/ceph \
        --ignore-closed
 
@@ -90,7 +90,7 @@ Hacking
     --gitlab-url http://workbench.dachary.org \
     --gitlab-token XXXXXXXXX \
     --gitlab-repo dachary/testrepo2 \
-    --github-token XXXXXXXXX \
+    --github-auth XXXXXXXXX \
     --github-repo dachary/testrepo \
     --ssh-public-key ~/.ssh/id_rsa.pub \
     --verbose  

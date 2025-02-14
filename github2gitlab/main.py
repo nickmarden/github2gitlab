@@ -69,7 +69,7 @@ class GitHub2GitLab(object):
             'url': "https://api.github.com",
             'git': "https://github.com",
             'repo': self.args.github_repo,
-            'token': self.args.github_token,
+            'auth': self.args.github_auth or None
         }
         if self.args.branches:
             self.github['branches'] = self.args.branches.split(',')
@@ -116,8 +116,8 @@ class GitHub2GitLab(object):
                             required=True)
         parser.add_argument('--gitlab-repo',
                             help='Gitlab repo (for instance ceph/ceph)')
-        parser.add_argument('--github-token',
-                            help='GitHub authentication token')
+        parser.add_argument('--github-auth',
+                            help='GitHub auth credentials, in the form username:token')
         parser.add_argument('--github-repo',
                             help='GitHub repo (for instance ceph/ceph)',
                             required=True)
@@ -197,9 +197,15 @@ class GitHub2GitLab(object):
 
     def git_mirror(self):
         name = self.gitlab['name']
+        url = self.github['git']
+
+        if(self.github['auth']):
+            url = self.github['git'].replace('https://', 'https://{}@'.format(self.github['auth']))
+
         if not os.path.exists(name):
-            self.sh("git clone --bare " + self.github['git'] +
+            self.sh("git clone --bare " + url +
                     "/" + self.github['repo'] + " " + name)
+
         repo = git.Repo(name)
         os.chdir(name)
         if not hasattr(repo.remotes, 'gitlab'):
@@ -508,8 +514,8 @@ class GitHub2GitLab(object):
         "https://developer.github.com/v3/pulls/#list-pull-requests"
         g = self.github
         query = {'state': 'all'}
-        if self.args.github_token:
-            query['access_token'] = g['token']
+        if g['auth']:
+            query['access_token'] = g['auth'].split(':')[1]
 
         def f(pull):
             if self.args.ignore_closed:
