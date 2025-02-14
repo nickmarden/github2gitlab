@@ -21,6 +21,7 @@ import argparse
 import git
 import gitdb
 import hashlib
+from http.client import HTTPConnection
 import json
 import logging
 import os
@@ -81,9 +82,11 @@ class GitHub2GitLab(object):
 
         if self.args.verbose:
             level = logging.DEBUG
+            HTTPConnection.debuglevel = 1
         else:
             level = logging.INFO
 
+        logging.getLogger("urllib3").setLevel(level)
         logging.getLogger('github2gitlab').setLevel(level)
 
         self.tmpdir = "/tmp"
