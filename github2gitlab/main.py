@@ -540,7 +540,7 @@ class GitHub2GitLab(object):
         g = self.gitlab
         query['private_token'] = g['token']
         url = g['url'] + "/projects/" + g['repo'] + "/merge_requests"
-        log.info('create_merge_request: ' + str(query))
+        log.debug('create_merge_request: ' + str(query))
         result = requests.post(url, params=query)
         if result.status_code != requests.codes.created:
             raise ValueError(result.text)
@@ -576,7 +576,7 @@ class GitHub2GitLab(object):
         updates['private_token'] = g['token']
         url = (g['url'] + "/projects/" + g['repo'] + "/merge_requests/" +
                str(merge_request['iid']))
-        log.info('update_merge_request: ' + url + ' <= ' + str(updates))
+        log.debug('update_merge_request: ' + url + ' <= ' + str(updates))
         return requests.put(url, params=updates).json()
 
     def verify_merge_update(self, updates, result):
