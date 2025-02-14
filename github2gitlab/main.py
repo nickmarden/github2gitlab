@@ -243,7 +243,7 @@ class GitHub2GitLab(object):
     def git_mirror_optimize(self, repo):
         self.sh("git fetch origin +refs/pull/*:refs/remotes/origin/pull/*")
         for head in repo.refs:
-            pr = re.search('^origin/pull/(\d+)/head$', head.name)
+            pr = re.search('^origin/pull/(\\d+)/head$', head.name)
             if not pr:
                 continue
             pr = pr.group(1)
