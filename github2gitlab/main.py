@@ -127,6 +127,9 @@ class GitHub2GitLab(object):
         parser.add_argument('--clean', action='store_const',
                             const=True,
                             help='Remove the repo after sync')
+        parser.add_argument('--no-push-prune', action='store_const',
+                            const=True,
+                            help='Skip the --prune flag during git push')
         return parser
 
     @staticmethod
@@ -209,10 +212,13 @@ class GitHub2GitLab(object):
         #
         # Push
         #
-        self.sh("git push --prune --force gitlab " +
-                branches_ref + " " +
+        push_command = "git push"
+        if not self.args.no_push_prune:
+            push_command += " --prune"
+        push_command += " --force gitlab " + (branches_ref + " " +
                 "+refs/heads/pull/*:refs/heads/pull/* " +
                 "+refs/tags/*:refs/tags/* ")
+        self.sh(push_command)
         os.chdir("..")
         self.revision2commit = {}
 
