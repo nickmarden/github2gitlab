@@ -78,7 +78,7 @@ class GitHub2GitLab(object):
             'host': self.args.gitlab_url,
             'name': self.args.gitlab_name,
             'namespace': self.args.gitlab_namespace,
-            'group': None,
+            'group_id': None,
             'url': self.args.gitlab_url + "/api/v4",
             'repo': self.args.gitlab_repo,
             'token': self.args.gitlab_token,
