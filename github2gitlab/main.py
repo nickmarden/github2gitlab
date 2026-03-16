@@ -34,6 +34,7 @@ import time
 import shutil
 
 DESCRIPTION_MAX = 1024
+TITLE_MAX = 255
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s')
 
@@ -380,6 +381,13 @@ class GitHub2GitLab(object):
             merge_value = merge_value.replace(GitHub2GitLab.TAG_MERGED, '')
             return (pull_value[:DESCRIPTION_MAX] ==
                     merge_value[:DESCRIPTION_MAX])
+        elif pull_field == 'title':
+            if merge_value is None:
+                merge_value = ''
+            if pull_value is None:
+                pull_value = ''
+            return (pull_value[:TITLE_MAX] ==
+                    merge_value[:TITLE_MAX])
         else:
             return pull_value == merge_value
 
@@ -399,6 +407,8 @@ class GitHub2GitLab(object):
             return ('state_event', value)
         elif pull_field == 'body':
             return (merge_field, pull_value[:DESCRIPTION_MAX])
+        elif pull_field == 'title':
+            return (merge_field, pull_value[:TITLE_MAX])
         else:
             return (merge_field, pull_value)
 
@@ -418,7 +428,7 @@ class GitHub2GitLab(object):
                 target_branch = pull['base']['ref']
                 if (self.rev_parse(pull, source_branch) and
                         self.rev_parse(pull, target_branch)):
-                    data = {'title': pull['title'],
+                    data = {'title': pull['title'][:TITLE_MAX],
                             'source_branch': source_branch,
                             'target_branch': target_branch}
                     if pull['body']:
