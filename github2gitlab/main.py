@@ -183,9 +183,12 @@ class GitHub2GitLab(object):
                 lines.append(line)
                 log.debug(str(line.strip()))
         if proc.wait() != 0:
+            output = "".join(lines)
+            log.error("Command failed: " + command + "\n" + output)
             raise subprocess.CalledProcessError(
                 returncode=proc.returncode,
-                cmd=command
+                cmd=command,
+                output=output
             )
         return "".join(lines)
 
