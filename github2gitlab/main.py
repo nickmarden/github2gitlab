@@ -96,7 +96,7 @@ class GitHub2GitLab(object):
 
         g = self.gitlab
         url = g['url'] + "/groups"
-        query = {'private_token': g['token'], 'all_available': 'true', 'per_page': 10000}
+        query = {'private_token': g['token'], 'all_available': 'true', 'per_page': 100, 'search': g['namespace'].split('/')[-1]}
         groups = requests.get(url, params=query).json()
         matches = list(filter(lambda group: group['full_path'] == g['namespace'].lower(), groups))
         if any(matches):
