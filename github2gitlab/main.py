@@ -34,6 +34,7 @@ import time
 import shutil
 
 DESCRIPTION_MAX = 1024
+TITLE_MAX = 255
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s')
 
@@ -78,7 +79,7 @@ class GitHub2GitLab(object):
             'host': self.args.gitlab_url,
             'name': self.args.gitlab_name,
             'namespace': self.args.gitlab_namespace,
-            'group': None,
+            'group_id': None,
             'url': self.args.gitlab_url + "/api/v4",
             'repo': self.args.gitlab_repo,
             'token': self.args.gitlab_token,
@@ -183,9 +184,12 @@ class GitHub2GitLab(object):
                 lines.append(line)
                 log.debug(str(line.strip()))
         if proc.wait() != 0:
+            output = "".join(lines)
+            log.error("Command failed: " + command + "\n" + output)
             raise subprocess.CalledProcessError(
                 returncode=proc.returncode,
-                cmd=command
+                cmd=command,
+                output=output
             )
         return "".join(lines)
 
@@ -377,6 +381,13 @@ class GitHub2GitLab(object):
             merge_value = merge_value.replace(GitHub2GitLab.TAG_MERGED, '')
             return (pull_value[:DESCRIPTION_MAX] ==
                     merge_value[:DESCRIPTION_MAX])
+        elif pull_field == 'title':
+            if merge_value is None:
+                merge_value = ''
+            if pull_value is None:
+                pull_value = ''
+            return (pull_value[:TITLE_MAX] ==
+                    merge_value[:TITLE_MAX])
         else:
             return pull_value == merge_value
 
@@ -396,6 +407,8 @@ class GitHub2GitLab(object):
             return ('state_event', value)
         elif pull_field == 'body':
             return (merge_field, pull_value[:DESCRIPTION_MAX])
+        elif pull_field == 'title':
+            return (merge_field, pull_value[:TITLE_MAX])
         else:
             return (merge_field, pull_value)
 
@@ -415,7 +428,7 @@ class GitHub2GitLab(object):
                 target_branch = pull['base']['ref']
                 if (self.rev_parse(pull, source_branch) and
                         self.rev_parse(pull, target_branch)):
-                    data = {'title': pull['title'],
+                    data = {'title': pull['title'][:TITLE_MAX],
                             'source_branch': source_branch,
                             'target_branch': target_branch}
                     if pull['body']:
